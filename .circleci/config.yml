@@ -105,7 +105,11 @@ jobs:
       - checkout 
       - restore_cache:
           keys: [frontend-build]
-      - run: npm run lint
+      - run: 
+          command: |
+            cd frontend
+            npm install
+            npm audit --audit-level=critical
 
   scan-backend:
     docker:
@@ -113,8 +117,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
-      - run: npm run lint
+          keys: [backend-build]
+      - run: 
+          command: |
+            cd backend
+            npm install
+            npm audit --audit-level=critical
 
   deploy-infrastructure:
     docker:
