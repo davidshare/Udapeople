@@ -62,8 +62,6 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
-      - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}
 
   build-backend:
     docker:
@@ -81,8 +79,6 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-      - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}
 
   test-frontend:
     docker:
@@ -130,9 +126,9 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              #--tags project=udapeople-backend \
-              # --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:5} \
-              # --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}  
+              --tags project=udapeople-backend \
+              --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:5} \
+              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}  
               exit 1
       - run:
           name: Ensure front-end infrastructure exist
@@ -303,7 +299,7 @@ jobs:
             # your code here
       # Here's where you will add some code to rollback on failure  
 
-cleanup:
+  cleanup:
     docker:
       - image: amazon/aws-cli
     steps:
