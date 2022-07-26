@@ -4,21 +4,32 @@ commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
-      service:
-        default: ""
+      workflow_id:
         type: string
     steps:
       - run:
           name: Destroy environments
           when: on_fail
           command: |
-            aws cloudformation delete-stack --stack-name udapeople-<< parameters.service >>-${CIRCLE_WORKFLOW_ID:0:5}
+            aws cloudformation delete-stack --stack-name udapeople-<< parameters.workflow_id >>-${CIRCLE_WORKFLOW_ID:0:5}
             exit 1
 
+  install_awscli:
+    description: Install AWS CLI
+    steps:
+      - run:
+          name: Install AWS CLI v2
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+          when: on_fail
+          
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
     parameters:
-      # Add parameter here     
+      workflow_id:
+        type: string     
     steps:
       - run:
           name: Revert migrations
@@ -149,26 +160,30 @@ jobs:
 
   configure-infrastructure:
     docker:
-      # Docker image here that supports Ansible
+      - image: python:3.7-alpine3.11
     steps:
       - checkout
-      # Add ssh keys with fingerprint
-      # attach workspace
+      - add_ssh_keys:
+          fingerprints: ["0d:db:2c:31:a3:4c:be:2a:2d:31:9d:37:89:fa:f4:ed"] 
+      - attach_workspace:
+          at: ./
       - run:
           name: Install dependencies
           command: |
-            # Your code here
+            apk add --update ansible
+            apk add openssh
             exit 1
       - run:
           name: Configure server
           command: |
-            # Your code here
+            ansible-playbook -i inventory main.yml
             exit 1
-      # Here's where you will add some code to rollback on failure      
+      - install_awscli
+      - destroy_environment      
 
   run-migrations:
     docker:
-      # Docker image here that supports NodeJS
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - run:
@@ -185,7 +200,7 @@ jobs:
 
   deploy-frontend:
     docker:
-      # Docker image here that supports AWS CLI
+      - image: amazon/aws-cli
     steps:
       - checkout
       - run:
@@ -206,24 +221,37 @@ jobs:
                     
   deploy-backend:
     docker:
-      # Docker image here that supports Ansible
+      - image: python:3.7-alpine3.11
     steps:
       - checkout
-      # Add ssh keys with fingerprint
-      # attach workspace
+      - add_ssh_keys:
+          fingerprints: ["0d:db:2c:31:a3:4c:be:2a:2d:31:9d:37:89:fa:f4:ed"] 
+      - attach_workspace:
+          at: ./
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            apk add --update ansible
+            apk add openssh
+            exit 1
       - run:
           name: Deploy backend
           command: |
-            # your code here
+            cd backend
+            npm i
+            npm run build
+            cd ..
+            # Zip the directory
+            tar -C backend -czvf artifact.tar.gz .
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
 
   smoke-test:
     docker:
-      # Lightweight Docker image 
+      - image: alpine/curl:3.14
     steps:
       - checkout
       - run:
@@ -237,16 +265,31 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            # your code here
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            if curl "${API_URL}/api/status" | grep "ok"
+            then
+                return 0
+            else
+                return 1
+            fi
       - run:
           name: Frontend smoke test.
           command: |
-            # your code here
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
+            echo ${URL} 
+            if curl -s ${URL} | grep "Welcome"
+            then
+                # Change this to 0 after the job fails
+              return 1
+            else
+              return 1
+            fi
       # Here's where you will add some code to rollback on failure  
 
   cloudfront-update:
     docker:
-      # Docker image here that supports AWS CLI
+      - image: amazon/aws-cli
     steps:
       - checkout
       - run:
@@ -261,7 +304,7 @@ jobs:
 
 cleanup:
     docker:
-      # Docker image here
+      - image: amazon/aws-cli
     steps:
       - checkout
       - run:
