@@ -63,7 +63,7 @@ jobs:
           paths: [frontend/node_modules]
           key: frontend-build
       - destroy-environment:
-          service: "frontend"
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}
 
   build-backend:
     docker:
@@ -82,7 +82,7 @@ jobs:
           paths: [backend/node_modules]
           key: backend-build
       - destroy-environment:
-          service: "backend"
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}
 
   test-frontend:
     docker:
@@ -179,7 +179,8 @@ jobs:
             ansible-playbook -i inventory main.yml
             exit 1
       - install_awscli
-      - destroy_environment      
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}      
 
   run-migrations:
     docker:
