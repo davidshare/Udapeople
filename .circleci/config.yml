@@ -49,37 +49,148 @@ commands:
             #  Add revert code here. You can find this in the Getting Started section.
               exit 1
             fi
-  trigger_slack_notification:
+
+  slack_success_notification:
+    parameters:
+      service:
+        type: string
+      message:
+        type: string
     steps:
       - slack/notify:
+          event: pass
           custom: |
             {
               "blocks": [
                 {
+                  "type": "divider"
+                },
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Build succeeded :white_check_mark:",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<< parameters.message >>"
+                  }
+                },
+                {
                   "type": "section",
                   "fields": [
                     {
-                      "type": "plain_text",
-                      "text": "*This is a text notification*",
-                      "emoji": true
+                      "type": "mrkdwn",
+                      "text": "*Project*: \n$CIRCLE_PROJECT_REPONAME"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Service*: \n<< parameters.service >>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Job*: \n${CIRCLE_JOB}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch*: \n$CIRCLE_BRANCH"
                     }
                   ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "Click here to view job"
+                      },
+                      "style": "primary",
+                      "url": "https://${CIRCLE_BUILD_URL}"
+                    }
+                  ]
+                },
+                {
+                  "type": "divider"
                 }
               ]
             }
-          event: always
-          
+
   slack_error_notification:
+    parameters:
+      service:
+        type: string
+      message:
+        type: string
     steps:
       - slack/notify:
           event: fail
-          template: basic_fail_1
-
-  slack_success_notification:
-    steps:
-      - slack/notify:
-          event: pass
-          template: basic_success_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Build failed :alert:",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<< parameters.message >>"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Project*: \n$CIRCLE_PROJECT_REPONAME"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Service*: \n<< parameters.service >>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Job*: \n${CIRCLE_JOB}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch*: \n$CIRCLE_BRANCH"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "Click here to view job"
+                      },
+                      "style": "primary",
+                      "url": "https://${CIRCLE_BUILD_URL}"
+                    }
+                  ]
+                },
+                {
+                  "type": "divider"
+                }
+              ]
+            }
             
 jobs:
   build-frontend:
@@ -98,8 +209,12 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
-      - slack_error_notification
-      - slack_success_notification
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
 
   build-backend:
     docker:
@@ -117,8 +232,12 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-      - slack_error_notification
-      - slack_success_notification
+      - slack_error_notification:
+          service: "backend"
+          message: "Sorry, the backend build has failed"
+      - slack_success_notification:
+          service: "backend"
+          message: "Hurray!!! the backend build was a success"
 
   test-frontend:
     docker:
@@ -130,10 +249,14 @@ jobs:
       - run: 
           command: |
             cd frontend
-            npm install
+            npm installs
             npm run test
-      - slack_error_notification
-      - slack_success_notification
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend test has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend test was a success"
                 
   test-backend:
     docker:
@@ -147,8 +270,12 @@ jobs:
             cd backend
             npm install
             npm run test
-      - slack_error_notification
-      - slack_success_notification
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
             
   scan-frontend:
     docker:
@@ -163,8 +290,12 @@ jobs:
             npm install
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-      - slack_error_notification
-      - slack_success_notification
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
 
   scan-backend:
     docker:
@@ -180,8 +311,12 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit fix --force
             npm audit --audit-level=critical
-      - slack_error_notification
-      - slack_success_notification
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
 
   deploy-infrastructure:
     docker:
@@ -220,8 +355,12 @@ jobs:
           paths:
             - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure 
-      - slack_error_notification
-      - slack_success_notification     
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
 
   configure-infrastructure:
     docker:
@@ -246,8 +385,12 @@ jobs:
       - install_awscli
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}     
-      - slack_error_notification
-      - slack_success_notification
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
 
   run-migrations:
     docker:
@@ -265,8 +408,12 @@ jobs:
             # Your code here
             exit 1
     # Here's where you will add some code to rollback on failure 
-      - slack_error_notification
-      - slack_success_notification     
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
 
   deploy-frontend:
     docker:
@@ -288,9 +435,12 @@ jobs:
           command: |
             # your code here
       # Here's where you will add some code to rollback on failure
-      - slack_error_notification
-      - slack_success_notification      
-                    
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
   deploy-backend:
     docker:
       - image: python:3.7-alpine3.11
@@ -320,8 +470,12 @@ jobs:
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
       # Here's where you will add some code to rollback on failure 
-      - slack_error_notification
-      - slack_success_notification
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
 
   smoke-test:
     docker:
@@ -360,8 +514,12 @@ jobs:
               return 1
             fi
       # Here's where you will add some code to rollback on failure
-      - slack_error_notification
-      - slack_success_notification  
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
 
   cloudfront-update:
     docker:
@@ -377,8 +535,12 @@ jobs:
           command: |
             # your code here
       # Here's where you will add some code to rollback on failure
-      - slack_error_notification
-      - slack_success_notification  
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
 
   cleanup:
     docker:
@@ -398,8 +560,12 @@ jobs:
             then
               # your code here
             fi
-      - slack_error_notification
-      - slack_success_notification
+      - slack_error_notification:
+          service: "frontend"
+          message: "Sorry, the frontend build has failed"
+      - slack_success_notification:
+          service: "frontend"
+          message: "Hurray!!! the frontend build was a success"
 
 workflows:
   default:
