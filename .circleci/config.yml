@@ -181,7 +181,7 @@ commands:
                         "type": "plain_text",
                         "text": "Click here to view job"
                       },
-                      "style": "primary",
+                      "style": "danger",
                       "url": "${CIRCLE_BUILD_URL}"
                     }
                   ]
