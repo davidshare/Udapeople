@@ -57,7 +57,7 @@ commands:
           when: on_fail
           name: Generate last log lines for slack message
           command: |
-            apk install -y jq
+            yum install -y jq
             API_URL=$(echo $CIRCLE_BUILD_URL | cut -d/ -f4-7)
             FAILED_STEP=$(curl "https://circleci.com/api/v1.1/project/${API_URL}?circle-token=${CIRCLE_API_TOKEN}" | jq '.steps | .[] | flatten | map(select(.status? == "failed")) | .[] | {allocation_id, step}')
 
@@ -281,9 +281,9 @@ jobs:
             npm install
             npm run test
       - slack_error_notification:
-          message: "Sorry, the frontend build has failed"
+          message: "Sorry, the backend test has failed"
       - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
+          message: "Hurray!!! the backend test was a success"
             
   scan-frontend:
     docker:
@@ -299,9 +299,9 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
       - slack_error_notification:
-          message: "Sorry, the frontend build has failed"
+          message: "Sorry, the frontend scan has failed"
       - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
+          message: "Hurray!!! the frontend scan was a success"
 
   scan-backend:
     docker:
@@ -318,15 +318,16 @@ jobs:
             npm audit fix --force
             npm audit --audit-level=critical
       - slack_error_notification:
-          message: "Sorry, the frontend build has failed"
+          message: "Sorry, the backend scan has failed"
       - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
+          message: "Hurray!!! the backend scan was a success"
 
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli
     steps:
       - checkout
+      - run: yum install -y tar gzip
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -407,9 +408,9 @@ jobs:
             exit 1
     # Here's where you will add some code to rollback on failure 
       - slack_error_notification:
-          message: "Sorry, the frontend build has failed"
+          message: "Sorry, the migration has failed"
       - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
+          message: "Hurray!!! the migration was a success"
 
   deploy-frontend:
     docker:
@@ -432,9 +433,9 @@ jobs:
             # your code here
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
-          message: "Sorry, the frontend build has failed"
+          message: "Sorry, the frontend deployment has failed"
       - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
+          message: "Hurray!!! the frontend deployment was a success"
   deploy-backend:
     docker:
       - image: python:3.7-alpine3.11
