@@ -410,7 +410,9 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            yum install -y nodejs npm tar gzip
+            yum update
+            yum install -y nodejs npm 
+            yum install -y tar gzip jq 
       - run:
           name: Get backend url
           command: |
