@@ -348,6 +348,8 @@ jobs:
           message: "Sorry, the infrastructure could not be deployed."
 
   configure-infrastructure:
+    environment:
+      - ANSIBLE_HOST_KEY_CHECKING: False
     docker:
       - image: python:3.7-alpine3.11
     steps:
