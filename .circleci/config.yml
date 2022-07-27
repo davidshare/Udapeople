@@ -225,8 +225,6 @@ jobs:
           key: frontend-build
       - slack_error_notification:
           message: "Sorry, the frontend build has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
 
   build-backend:
     docker:
@@ -246,8 +244,6 @@ jobs:
           key: backend-build
       - slack_error_notification:
           message: "Sorry, the backend build has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the backend build was a success"
 
   test-frontend:
     docker:
@@ -263,8 +259,6 @@ jobs:
             npm run test
       - slack_error_notification:
           message: "Sorry, the frontend test has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the frontend test was a success"
                 
   test-backend:
     docker:
@@ -280,8 +274,6 @@ jobs:
             npm run test
       - slack_error_notification:
           message: "Sorry, the backend test has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the backend test was a success"
             
   scan-frontend:
     docker:
@@ -298,8 +290,6 @@ jobs:
             npm audit --audit-level=critical
       - slack_error_notification:
           message: "Sorry, the frontend scan has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the frontend scan was a success"
 
   scan-backend:
     docker:
@@ -317,8 +307,6 @@ jobs:
             npm audit --audit-level=critical
       - slack_error_notification:
           message: "Sorry, the backend scan has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the backend scan was a success"
 
   deploy-infrastructure:
     docker:
@@ -346,23 +334,18 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             aws ec2 describe-instances \
-              --filters "Name=tag:project,Values=udapeople-backend" \
+              --filters "Name=tag:Name,Values=UdaPeople-backend-${CIRCLE_WORKFLOW_ID:0:5}" \
                 'Name=instance-state-name,Values=running' \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --output text >> inventory.txt
-              pwd
-              ls -al
-              cat .circleci/ansible/inventory.txt
+              --output text >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
-          root: ~/
+          root: .
           paths:
-            - project/.circleci/ansible/inventory.txt
+            - ./.circleci/ansible/inventory.txt
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:5} 
       - slack_error_notification:
           message: "Sorry, the infrastructure could not be deployed."
-      - slack_success_notification:
-          message: "Hurray!!! the infrastructure deployment was successful"
 
   configure-infrastructure:
     docker:
@@ -376,6 +359,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            pwd
+            ls -al
             cat .circleci/ansible/inventory.txt
             apk add --update ansible
             apk add openssh
@@ -390,8 +375,6 @@ jobs:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}     
       - slack_error_notification:
           message: "Sorry, the frontend build has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
 
   run-migrations:
     docker:
@@ -418,8 +401,6 @@ jobs:
     # Here's where you will add some code to rollback on failure 
       - slack_error_notification:
           message: "Sorry, the migration has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the migration was a success"
 
   deploy-frontend:
     docker:
@@ -475,8 +456,6 @@ jobs:
       # Here's where you will add some code to rollback on failure 
       - slack_error_notification:
           message: "Sorry, the frontend build has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
 
   smoke-test:
     docker:
@@ -517,8 +496,6 @@ jobs:
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
           message: "Sorry, the frontend build has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
 
   cloudfront-update:
     docker:
@@ -536,8 +513,6 @@ jobs:
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
           message: "Sorry, the frontend build has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
 
   cleanup:
     docker:
@@ -559,8 +534,6 @@ jobs:
             fi
       - slack_error_notification:
           message: "Sorry, the frontend build has failed"
-      - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
 
 workflows:
   default:
