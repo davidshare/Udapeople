@@ -395,7 +395,7 @@ jobs:
             cat ~/project/backend/migrations_dump.txt
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              curl -H "Content-Type: text/plain" -H "Content-Length: 0" -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/3cg7aby9/1/migration_${CIRCLE_WORKFLOW_ID:0:7}
+              curl -H "Content-Type: text/plain" -H "Content-Length: 0" -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/38ppmwpv/1/migration_${CIRCLE_WORKFLOW_ID:0:7}
             fi
 
     # Here's where you will add some code to rollback on failure 
