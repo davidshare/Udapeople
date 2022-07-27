@@ -392,6 +392,7 @@ jobs:
       - run:
           name: Send migration results to https://keyvalue.immanuel.co
           command: |
+            cat ~/project/backend/migrations_dump.txt
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
               curl -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/3cg7aby9/1/migration_${CIRCLE_WORKFLOW_ID:0:7}
@@ -409,22 +410,31 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            yum install -y nodejs npm tar gzip
       - run:
           name: Get backend url
           command: |
-            # your code here
+            export BACKEND_IP=$(aws ec2 describe-instances...............)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            cat frontend/.env
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
       - run:
           name: Deploy frontend objects
           command: |
-            # your code here
+            cd frontend
+            npm install
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
           message: "Sorry, the frontend deployment has failed"
       - slack_success_notification:
           message: "Hurray!!! the frontend deployment was a success"
+
   deploy-backend:
     docker:
       - image: python:3.7-alpine3.11
@@ -437,8 +447,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible
-            apk add openssh
+            apk add --update ansible nodejs npm openssh tar gzip
       - run:
           name: Deploy backend
           command: |
