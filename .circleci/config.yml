@@ -140,7 +140,7 @@ commands:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "Build failed :alert:",
+                    "text": "Build failed :warning:",
                     "emoji": true
                   }
                 },
