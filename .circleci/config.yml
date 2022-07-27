@@ -49,11 +49,30 @@ commands:
             #  Add revert code here. You can find this in the Getting Started section.
               exit 1
             fi
+  
+  # Source: https://discuss.circleci.com/t/leveraging-circleci-api-to-include-build-logs-in-slack-notifications/39111
+  get_failure_logs:
+    description: get a part of the logs from failed builds and send it as a message
+    steps:
+      - run:
+          when: on_fail
+          name: Generate last log lines for slack message
+          command: |
+            sudo apt-get update
+            sudo apt-get install jq
+            API_URL=$(echo $CIRCLE_BUILD_URL | cut -d/ -f4-7)
+            FAILED_STEP=$(curl "https://circleci.com/api/v1.1/project/${API_URL}?circle-token=${CIRCLE_API_TOKEN}" | jq '.steps | .[] | flatten | map(select(.status? == "failed")) | .[] | {allocation_id, step}')
+
+            ALLOCATION_ID=$(echo "${FAILED_STEP}" | jq -r '.allocation_id')
+            STEP=$(echo "${FAILED_STEP}" | jq -r '.step')
+            curl -o slack_response.txt "https://circleci.com/api/v1.1/project/${API_URL}/output/${STEP}/0?file=true&allocation-id=${ALLOCATION_ID}&circle-token=$CIRCLE_API_TOKEN"
+            sed -i 's/\r$//g' slack_response.txt
+            SLACK_MESSAGE=$(cat slack_response.txt | tail -n 10 | sed '$!s/$/\\n/' | tr -d '\n')
+            echo $SLACK_MESSAGE
+            echo "export SLACK_MESSAGE='${SLACK_MESSAGE}'" >> $BASH_ENV
 
   slack_success_notification:
     parameters:
-      service:
-        type: string
       message:
         type: string
     steps:
@@ -123,11 +142,10 @@ commands:
 
   slack_error_notification:
     parameters:
-      service:
-        type: string
       message:
         type: string
     steps:
+      - get_failure_logs
       - slack/notify:
           event: fail
           custom: |
@@ -148,7 +166,7 @@ commands:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "<< parameters.message >>"
+                    "text": "<< parameters.message >> \n ```${SLACK_MESSAGE}```"
                   }
                 },
                 {
@@ -210,10 +228,8 @@ jobs:
           paths: [frontend/node_modules]
           key: frontend-build
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
 
   build-backend:
@@ -233,10 +249,8 @@ jobs:
           paths: [backend/node_modules]
           key: backend-build
       - slack_error_notification:
-          service: "backend"
           message: "Sorry, the backend build has failed"
       - slack_success_notification:
-          service: "backend"
           message: "Hurray!!! the backend build was a success"
 
   test-frontend:
@@ -249,13 +263,11 @@ jobs:
       - run: 
           command: |
             cd frontend
-            npm installs
+            npm install
             npm run test
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend test has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend test was a success"
                 
   test-backend:
@@ -271,10 +283,8 @@ jobs:
             npm install
             npm run test
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
             
   scan-frontend:
@@ -291,10 +301,8 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
 
   scan-backend:
@@ -312,10 +320,8 @@ jobs:
             npm audit fix --force
             npm audit --audit-level=critical
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
 
   deploy-infrastructure:
@@ -331,7 +337,6 @@ jobs:
               --tags project=udapeople-backend \
               --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:5} \
               --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}  
-              exit 1
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -340,7 +345,6 @@ jobs:
               #--tags project=your-tag \
               # --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:5} \
               # --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}  
-              exit 1
       - run:
           name: Add back-end ip to ansible inventory
           command: |
@@ -349,17 +353,14 @@ jobs:
                 'Name=instance-state-name,Values=running' \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text >> inventory.txt
-            exit 1
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure 
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
 
   configure-infrastructure:
@@ -584,7 +585,7 @@ workflows:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
-              only: [test-feature-branch]
+              only: [master]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:

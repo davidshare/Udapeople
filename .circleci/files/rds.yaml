@@ -1,0 +1,40 @@
+Parameters:
+  DatabaseName:
+    Type: String
+    Description: "Enter the database name"
+    NoEcho: true
+  DatabaseUser:
+    Type: String
+    Description: "Enter the database username"
+    NoEcho: true
+  DatabasePassword:
+    Type: String
+    Description: "Enter the database password"
+    NoEcho: true
+
+Resources:
+  PostgresDBInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      DBName: !Ref DatabaseName
+      MasterUsername: !Ref DatabaseUser
+      MasterUserPassword: !Ref DatabasePassword
+      Engine: postgres
+      DBInstanceClass: db.t2.micro
+      StorageType: gp2
+      PubliclyAccessible: True
+      AllocatedStorage: "5"
+      BackupRetentionPeriod: 0
+      DBInstanceIdentifier: !Join ["-", [ "PostgresDBInstance", !Ref "AWS::Region" ]]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      DeletionProtection: false
+      Tags:
+        - Key: Name
+          Value: Udapeople-db
+
+Outputs:
+  WebAppDatabaseEndpoint:
+    Description: "The database connection string"
+    Value: !GetAtt PostgresDBInstance.Endpoint.Address
