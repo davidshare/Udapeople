@@ -33,3 +33,18 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub UdaPeople-backend-${ID}
+
+  DatabaseInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: udapeople-DatabaseInstanceSecurityGroup
+      GroupDescription: Allow inbound traffic to the postress instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupName:
+            Ref: InstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: udapeople-database-instance-security-group
