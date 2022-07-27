@@ -37,7 +37,7 @@ Resources:
   DatabaseInstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: udapeople-DatabaseInstanceSecurityGroup
+      GroupName: udapeople-database-instance-security-group
       GroupDescription: Allow inbound traffic to the postress instance
       SecurityGroupIngress:
         - IpProtocol: tcp
