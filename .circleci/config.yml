@@ -387,10 +387,8 @@ jobs:
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}     
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
 
   run-migrations:
@@ -410,10 +408,8 @@ jobs:
             exit 1
     # Here's where you will add some code to rollback on failure 
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
 
   deploy-frontend:
@@ -437,10 +433,8 @@ jobs:
             # your code here
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
   deploy-backend:
     docker:
@@ -472,10 +466,8 @@ jobs:
             ansible-playbook -i inventory.txt deploy-backend.yml
       # Here's where you will add some code to rollback on failure 
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
 
   smoke-test:
@@ -516,10 +508,8 @@ jobs:
             fi
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
 
   cloudfront-update:
@@ -537,10 +527,8 @@ jobs:
             # your code here
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
 
   cleanup:
@@ -562,10 +550,8 @@ jobs:
               # your code here
             fi
       - slack_error_notification:
-          service: "frontend"
           message: "Sorry, the frontend build has failed"
       - slack_success_notification:
-          service: "frontend"
           message: "Hurray!!! the frontend build was a success"
 
 workflows:
