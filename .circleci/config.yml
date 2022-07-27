@@ -89,7 +89,7 @@ commands:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Service*: \n<< parameters.service >>"
+                      "text": "*Service*: \n$CIRCLE_JOB"
                     },
                     {
                       "type": "mrkdwn",
@@ -111,7 +111,7 @@ commands:
                         "text": "Click here to view job"
                       },
                       "style": "primary",
-                      "url": "https://${CIRCLE_BUILD_URL}"
+                      "url": "${CIRCLE_BUILD_URL}"
                     }
                   ]
                 },
@@ -160,7 +160,7 @@ commands:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Service*: \n<< parameters.service >>"
+                      "text": "*Service*: \n$CIRCLE_JOB"
                     },
                     {
                       "type": "mrkdwn",
@@ -182,7 +182,7 @@ commands:
                         "text": "Click here to view job"
                       },
                       "style": "primary",
-                      "url": "https://${CIRCLE_BUILD_URL}"
+                      "url": "${CIRCLE_BUILD_URL}"
                     }
                   ]
                 },
