@@ -46,7 +46,6 @@ commands:
             #  cd ~/project/backend
             #  npm install
             #  Add revert code here. You can find this in the Getting Started section.
-              exit 1
             fi
   
   # Source: https://discuss.circleci.com/t/leveraging-circleci-api-to-include-build-logs-in-slack-notifications/39111
@@ -57,7 +56,6 @@ commands:
           when: on_fail
           name: Generate last log lines for slack message
           command: |
-            yum install -y jq
             API_URL=$(echo $CIRCLE_BUILD_URL | cut -d/ -f4-7)
             FAILED_STEP=$(curl "https://circleci.com/api/v1.1/project/${API_URL}?circle-token=${CIRCLE_API_TOKEN}" | jq '.steps | .[] | flatten | map(select(.status? == "failed")) | .[] | {allocation_id, step}')
 
@@ -377,12 +375,12 @@ jobs:
           command: |
             apk add --update ansible
             apk add openssh
-            exit 1
+            apk add curl
       - run:
           name: Configure server
           command: |
-            ansible-playbook -i inventory main.yml
-            exit 1
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml
       - install_awscli
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}     
@@ -450,7 +448,6 @@ jobs:
           command: |
             apk add --update ansible
             apk add openssh
-            exit 1
       - run:
           name: Deploy backend
           command: |
