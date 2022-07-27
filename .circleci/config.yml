@@ -331,25 +331,28 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              --tags project=udapeople-backend \
               --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:5} \
-              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}  
+              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5} \
+              --tags project=udapeople-backend
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              --tags project=udapeople-frontend\
               --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:5} \
-              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}  
+              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5} \
+              --tags project=udapeople-frontend
       - run:
           name: Add back-end ip to ansible inventory
           command: |
             aws ec2 describe-instances \
-              --filters "Name=tag:project,Values=udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:5}" \
+              --filters "Name=tag:project,Values=udapeople-backend" \
                 'Name=instance-state-name,Values=running' \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text >> inventory.txt
+              pwd
+              ls -al
+              cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
@@ -373,6 +376,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            cat .circleci/ansible/inventory.txt
             apk add --update ansible
             apk add openssh
             apk add curl
