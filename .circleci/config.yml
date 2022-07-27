@@ -17,7 +17,6 @@ commands:
           when: on_fail
           command: |
             aws cloudformation delete-stack --stack-name udapeople-<< parameters.workflow_id >>-${CIRCLE_WORKFLOW_ID:0:5}
-            exit 1
 
   install_awscli:
     description: Install AWS CLI
@@ -58,8 +57,7 @@ commands:
           when: on_fail
           name: Generate last log lines for slack message
           command: |
-            sudo apt-get update
-            sudo apt-get install jq
+            apk install -y jq
             API_URL=$(echo $CIRCLE_BUILD_URL | cut -d/ -f4-7)
             FAILED_STEP=$(curl "https://circleci.com/api/v1.1/project/${API_URL}?circle-token=${CIRCLE_API_TOKEN}" | jq '.steps | .[] | flatten | map(select(.status? == "failed")) | .[] | {allocation_id, step}')
 
@@ -108,7 +106,7 @@ commands:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Service*: \n$CIRCLE_JOB"
+                      "text": "*Job*: \n$CIRCLE_JOB"
                     },
                     {
                       "type": "mrkdwn",
@@ -178,7 +176,7 @@ commands:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Service*: \n$CIRCLE_JOB"
+                      "text": "*Job*: \n$CIRCLE_JOB"
                     },
                     {
                       "type": "mrkdwn",
@@ -342,9 +340,9 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              #--tags project=your-tag \
-              # --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:5} \
-              # --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}  
+              --tags project=udapeople-frontend\
+              --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:5} \
+              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}  
       - run:
           name: Add back-end ip to ansible inventory
           command: |
@@ -357,11 +355,12 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-      # Here's where you will add some code to rollback on failure 
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:5} 
       - slack_error_notification:
-          message: "Sorry, the frontend build has failed"
+          message: "Sorry, the infrastructure could not be deployed."
       - slack_success_notification:
-          message: "Hurray!!! the frontend build was a success"
+          message: "Hurray!!! the infrastructure deployment was successful"
 
   configure-infrastructure:
     docker:
