@@ -433,8 +433,6 @@ jobs:
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
           message: "Sorry, the frontend deployment failed"
-      - slack_success_notification:
-          message: "Hurray!!! the frontend deployment was a success"
 
   deploy-backend:
     docker:
@@ -468,17 +466,20 @@ jobs:
 
   smoke-test:
     docker:
-      - image: alpine/curl:3.14
+      - image: python:3.10.5-alpine3.16
     steps:
       - checkout
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            apk add --update --no-cache curl aws-cli tar gzip jq
       - run:
           name: Get backend url
           command: |
-            # your code here
+            export BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udapeople" \
+              --output text)
       - run:
           name: Backend smoke test.
           command: |
@@ -504,7 +505,7 @@ jobs:
             fi
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
-          message: "Sorry, the frontend build has failed"
+          message: "The smoke tests failed"
 
   cloudfront-update:
     docker:
