@@ -411,6 +411,7 @@ jobs:
           name: Install dependencies
           command: |
             apk add --update nodejs npm tar gzip curl
+            pip3 install awscli
       - run:
           name: Get backend url
           command: |
