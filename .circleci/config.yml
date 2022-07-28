@@ -410,7 +410,10 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt install -y tar gzip jq aws-cli
+            sudo apt install -y tar gzip jq
+            curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            ./aws/install
       - run:
           name: Get backend url
           command: |
