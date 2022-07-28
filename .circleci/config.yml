@@ -510,6 +510,8 @@ jobs:
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
           message: "The smoke tests failed"
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}
 
   cloudfront-update:
     docker:
