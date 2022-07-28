@@ -395,7 +395,7 @@ jobs:
             cat ~/project/backend/migrations_dump.txt
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              curl -H "Content-Type: text/plain" -H "Content-Length: 0" -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/38ppmwpv/1/migration_${CIRCLE_WORKFLOW_ID:0:7}
+              curl -H "Content-Type: text/plain" -H "Content-Length: 0" -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/38ppmwpv/1/migration_${CIRCLE_WORKFLOW_ID:0:5}
             fi
 
     # Here's where you will add some code to rollback on failure 
@@ -412,6 +412,7 @@ jobs:
           command: |
             apk add --update nodejs npm tar gzip curl
             pip3 install awscli
+            apk add --update --no-cache tar gzip nodejs npm curl jq aws-cli
       - run:
           name: Get backend url
           command: |
@@ -428,8 +429,8 @@ jobs:
             cd frontend
             npm install
             npm run build
-            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:5}".tar.gz dist
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:5} --recursive
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
           message: "Sorry, the frontend deployment has failed"
@@ -493,7 +494,7 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:5}.s3-website-us-east-1.amazonaws.com/#/employees"            
             echo ${URL} 
             if curl -s ${URL} | grep "Welcome"
             then
