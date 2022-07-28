@@ -12,4 +12,5 @@
   shell: |
     npm install
     pm2 stop default
+    pm2 start npm -- start
     pm2 start dist/main.js --name node-app

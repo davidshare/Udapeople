@@ -488,8 +488,9 @@ jobs:
 
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            if curl -s -v "${API_URL}/api/status" | grep "ok"
-            then
+
+            STATUS_CODE=$(curl --output /dev/null --silent --write-out "%{http_code}" "${API_URL}/api/status")
+            if [ "$STATUS_CODE" -eq "200" ]; then
                 return 0
             else
                 return 1
