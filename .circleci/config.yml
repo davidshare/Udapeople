@@ -491,7 +491,7 @@ jobs:
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
 
-            STATUS_CODE=$(curl -v --connect-timeout 120 --output /dev/null --silent --write-out "%{http_code}" "${API_URL}/api/status")
+            STATUS_CODE=$(curl -v --connect-timeout 300 --output /dev/null --silent --write-out "%{http_code}" "${API_URL}/api/status")
             if [[ "$STATUS_CODE" == "200" ]]
             then
               echo "alive"
