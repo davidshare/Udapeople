@@ -404,15 +404,13 @@ jobs:
 
   deploy-frontend:
     docker:
-      - image: amazon/aws-cli
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - run:
           name: Install dependencies
           command: |
-            yum update
-            yum install -y tar gzip jq
-            yum install nodejs npm --enablerepo=epel
+            apt install -y tar gzip jq aws-cli
       - run:
           name: Get backend url
           command: |
