@@ -411,8 +411,8 @@ jobs:
           name: Install dependencies
           command: |
             yum update
-            yum install -y nodejs npm 
-            yum install -y tar gzip jq 
+            yum install -y tar gzip jq
+            yum install nodejs npm --enablerepo=epel
       - run:
           name: Get backend url
           command: |
