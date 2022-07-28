@@ -410,8 +410,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update nodejs npm tar gzip curl
-            pip3 install awscli
+            # apk add --update nodejs npm tar gzip curl
+            # pip3 install awscli
             apk add --update --no-cache tar gzip nodejs npm curl jq aws-cli
       - run:
           name: Get backend url
@@ -433,7 +433,7 @@ jobs:
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:5} --recursive
       # Here's where you will add some code to rollback on failure
       - slack_error_notification:
-          message: "Sorry, the frontend deployment has failed"
+          message: "Sorry, the frontend deployment failed"
       - slack_success_notification:
           message: "Hurray!!! the frontend deployment was a success"
 
