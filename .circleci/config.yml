@@ -491,13 +491,16 @@ jobs:
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
 
-            STATUS_CODE=$(curl --output /dev/null --silent --write-out "%{http_code}" "${API_URL}/api/status")
-            if [$STATUS_CODE -eq 200 ]
+            STATUS_CODE=$(curl -v --connect-timeout 15 --output /dev/null --silent --write-out "%{http_code}" "${API_URL}/api/status")
+            if [[ "$STATUS_CODE" == "200" ]]
             then
+              echo "alive"
                 return 0
             else
-                return 1
+              echo "dead"
+              return 1
             fi
+
       - run:
           name: Frontend smoke test.
           command: |
