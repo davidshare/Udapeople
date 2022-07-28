@@ -492,7 +492,7 @@ jobs:
             echo "${API_URL}"
 
             STATUS_CODE=$(curl --output /dev/null --silent --write-out "%{http_code}" "${API_URL}/api/status")
-            if "$STATUS_CODE" -eq "200" 
+            if [$STATUS_CODE -eq 200 ]
             then
                 return 0
             else
