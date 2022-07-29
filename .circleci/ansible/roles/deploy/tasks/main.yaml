@@ -22,8 +22,7 @@
     echo "TYPEORM_DATABASE={{ lookup('env', 'TYPEORM_DATABASE')}}" >> .env
     echo "TYPEORM_MIGRATIONS={{ lookup('env', 'TYPEORM_MIGRATIONS')}}" >> .env
     echo "TYPEORM_MIGRATIONS_DIR={{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}" >> .env
-    source .env
-
+    
 - name: start server
   become: yes
   become_method: sudo
