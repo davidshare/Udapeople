@@ -401,7 +401,10 @@ jobs:
               curl -H "Content-Type: text/plain" -H "Content-Length: 0" -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/38ppmwpv/1/migration_${CIRCLE_WORKFLOW_ID:0:5}
             fi
 
-    # Here's where you will add some code to rollback on failure 
+      - revert-migrations: 
+          workflow_id: ${CIRCLE_WORKFLOW_ID} 
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:5}
       - slack_error_notification:
           message: "Sorry, the migration has failed"
 
