@@ -16,9 +16,10 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            aws cloudformation delete-stack --stack-name udapeople-<< parameters.workflow_id >>-${CIRCLE_WORKFLOW_ID:0:5}
-            aws s3 rm "s3://udapeople-<< parameters.workflow_id >>-${CIRCLE_WORKFLOW_ID:0:5}" --recursive
-            aws s3 rb "s3://udapeople-<< parameters.workflow_id >>-${CIRCLE_WORKFLOW_ID:0:5}"
+            aws s3 rm "s3://udapeople-<< parameters.workflow_id >>" --recursive
+            aws s3 rb "s3://udapeople-<< parameters.workflow_id >>"
+            aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.workflow_id >>
+            aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.workflow_id >>
 
   install_awscli:
     description: Install AWS CLI
@@ -42,12 +43,12 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
+            SUCCESS = $(curl -X POST https://keyvalue.immanuel.co/api/KeyVal/GetValue/38ppmwpv/1/migration_${CIRCLE_WORKFLOW_ID:0:5})
             if(( $SUCCESS==1 )); 
             then
-            #  cd ~/project/backend
-            #  npm install
-            #  Add revert code here. You can find this in the Getting Started section.
+              cd ~/project/backend
+              npm install
+              npm run migration:revert
             fi
   
   # Source: https://discuss.circleci.com/t/leveraging-circleci-api-to-include-build-logs-in-slack-notifications/39111
@@ -523,14 +524,28 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            yum -y install tar gzip
       - run:
           name: Update cloudfront distribution
           command: |
-            # your code here
-      # Here's where you will add some code to rollback on failure
+            export OldWorkflowID=$(aws cloudformation list-exports \
+            --query "Exports[?Name=='WorkflowID'].Value" \
+            --no-paginate --output text)
+            
+            aws cloudformation deploy \
+              --template-file .circleci/files/cloudfront.yml \
+              --stack-name InitialStack \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID}" \
+              --tags project=udapeople
+
+            echo "Upgraded environment from ${OldWorkflowID} to ${CIRCLE_WORKFLOW_ID}"
+
       - slack_error_notification:
-          message: "Sorry, the frontend build has failed"
+          message: "Sorry, failed to promote new deployment."
+      - revert-migrations: 
+          workflow_id: ${CIRCLE_WORKFLOW_ID}
+      - destroy-environment: 
+          workflow_id: ${CIRCLE_WORKFLOW_ID}
 
   cleanup:
     docker:
@@ -540,15 +555,30 @@ jobs:
       - run:
           name: Get old stack workflow id
           command: |
-            # your code here
-            export OldWorkflowID="the id here"
-            export STACKS=[] #put the list of stacks here
+            # Fetch the Old workflow ID
+            export OldWorkflowID=$(aws cloudformation \
+              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate --output text)
+
+            echo OldWorkflowID: "${OldWorkflowID}"
+            echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:5}"
+
+            # Fetch the stack names          
+            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+                    --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+            
+            echo Stack names: "${STACKS[@]}" 
       - run:
           name: Remove old stacks and files
           command: |
-            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+            if [[ "${CIRCLE_WORKFLOW_ID}" != "${OldWorkflowID}" ]]
             then
-              # your code here
+              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+              aws s3 rb "s3://udapeople-${OldWorkflowID}"
+              aws cloudformation delete-stack --stack-name udapeople-frontend-${OldWorkflowID}
+              aws cloudformation delete-stack --stack-name udapeople-backend-${OldWorkflowID}
+            else
+              echo "Sorry, could not clean up"
             fi
       - slack_error_notification:
           message: "Sorry, the frontend build has failed"
