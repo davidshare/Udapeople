@@ -1,4 +1,4 @@
 URL01: https://github.com/davidshare/Udapeople
 URL02: http://udapeople-9d1c4.s3-website-us-east-1.amazonaws.com/
 
-http://ec2-3-95-158-124.compute-1.amazonaws.com:3030/api/status
+backend url: http://ec2-3-95-158-124.compute-1.amazonaws.com:3030/api/status
