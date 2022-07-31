@@ -545,7 +545,6 @@ jobs:
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:5}" \
               --tags project=udapeople
 
-            curl -v -H "Content-Type: text/plain" -H "Content-Length: 0" -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/38ppmwpv/old_workflow_id/${CIRCLE_WORKFLOW_ID:0:5}
             echo "Upgraded environment from ${OldWorkflowID} to ${CIRCLE_WORKFLOW_ID:0:5}"
 
       - slack_error_notification:
@@ -585,6 +584,8 @@ jobs:
             else
               echo "Sorry, could not clean up"
             fi
+
+            curl -v -H "Content-Type: text/plain" -H "Content-Length: 0" -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/38ppmwpv/old_workflow_id/${CIRCLE_WORKFLOW_ID:0:5}
       - slack_error_notification:
           message: "Sorry, the clean up process failed."
 
